@@ -1,185 +1,364 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!--
-                                  
-                              
-  _ __ ___ _   _ _ __  _____ __ 
- | '__/ __| | | | '_ \|_  / '__|
- | |  \__ \ |_| | | | |/ /| |   
- |_|  |___/\__, |_| |_/___|_|   
-            __/ |               
-           |___/               
-                                     -->
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Crush Database</title>
+<title>Crush Database — rsynzr.cloud</title>
 <style>
-  :root{
-    --bg:#f8f9fb; --card:#ffffff; --muted:#6b7280;
-    --primary:#3b82f6; --accent:#8b5cf6; --text:#1f2937;
-    --msg-user:#dbeafe; --msg-bot:#f3f4f6; --border:#e5e7eb;
-    --success:#10b981; --hover:#f0f4ff;
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-dark: #0b1220;
+    --bg-mid: #0f1b3d;
+    --bg-light: #1a2f6b;
+    --accent: #3b82f6;
+    --accent-bright: #60a5fa;
+    --accent-glow: rgba(59,130,246,0.4);
+    --text-primary: #e8f0fe;
+    --text-secondary: #94a3b8;
+    --card-bg: rgba(15,27,61,0.7);
+    --card-border: rgba(59,130,246,0.18);
+    --input-bg: rgba(255,255,255,0.05);
+    --input-border: rgba(255,255,255,0.12);
+    --msg-user-bg: rgba(59,130,246,0.18);
+    --msg-user-border: rgba(59,130,246,0.3);
+    --msg-bot-bg: rgba(255,255,255,0.05);
+    --msg-bot-border: rgba(96,165,250,0.15);
+    --hover-bg: rgba(59,130,246,0.1);
+    --nav-bg: rgba(11,18,32,0.75);
   }
-  html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg, var(--bg) 0%, #f0f4ff 100%);color:var(--text);}
-  .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:20px;}
-  .card{width:100%;max-width:650px;background:var(--card);border-radius:12px;border:1px solid var(--border);overflow:hidden;box-shadow:0 20px 60px rgba(59,130,246,0.1);}
-  
-  .header{padding:16px 20px;background:linear-gradient(90deg, rgba(59,130,246,0.05), rgba(139,92,246,0.05));border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;}
-  .title{font-size:1.1rem;font-weight:700;letter-spacing:0.5px;color:var(--primary);}
-  .version{background:rgba(59,130,246,0.1);padding:4px 10px;border:1px solid rgba(59,130,246,0.3);border-radius:4px;font-size:0.7rem;color:var(--primary);letter-spacing:0.5px;}
-  
-  .body{padding:16px;display:flex;flex-direction:column;gap:12px}
-  
-  #chatbox{height:340px;border-radius:8px;padding:12px;overflow:auto;background:linear-gradient(180deg,#fafbfc,#ffffff);border:1px solid var(--border)}
-  #chatbox::-webkit-scrollbar{width:6px}
-  #chatbox::-webkit-scrollbar-thumb{background:rgba(59,130,246,0.3);border-radius:3px}
-  #chatbox::-webkit-scrollbar-track{background:transparent}
-  
-  .msg{display:flex;gap:8px;margin:6px 0;align-items:flex-end}
-  .msg.user{justify-content:flex-end}
-  .bubble{padding:8px 12px;border-radius:8px;font-size:0.9rem;line-height:1.4;max-width:75%}
-  .bubble.user{background:var(--msg-user);color:#1e40af;border:1px solid rgba(59,130,246,0.2)}
-  .bubble.bot{background:var(--msg-bot);color:var(--text);border:1px solid rgba(139,92,246,0.2)}
-  .meta{font-size:0.65rem;color:var(--muted);margin-top:2px}
-  
-  .input-row{display:flex;gap:8px;align-items:center}
-  .input{flex:1;padding:10px 12px;border-radius:6px;border:1px solid var(--border);background:#ffffff;font-size:0.95rem;color:var(--text);transition:all 0.3s ease}
-  .input:focus{outline:none;border-color:var(--primary);background:#ffffff;box-shadow:0 0 12px rgba(59,130,246,0.2)}
-  .input::placeholder{color:var(--muted)}
-  
-  .btn{padding:10px 14px;border-radius:6px;border:1px solid var(--primary);background:transparent;color:var(--primary);font-weight:600;cursor:pointer;font-size:0.85rem;transition:all 0.3s ease}
-  .btn:hover{background:var(--primary);color:#ffffff;box-shadow:0 0 12px rgba(59,130,246,0.4)}
-  .btn.secondary{border-color:var(--muted);color:var(--muted)}
-  .btn.secondary:hover{background:var(--muted);color:var(--bg)}
-  
-  .results{margin-top:6px;border-radius:6px;border:1px solid var(--border);background:#ffffff;max-height:180px;overflow:auto;padding:4px}
-  .result-item{display:flex;justify-content:space-between;align-items:center;padding:7px;border-radius:4px;cursor:pointer;font-size:0.85rem;color:var(--text);transition:all 0.2s ease}
-  .result-item:hover, .result-item.active{background:var(--hover);color:var(--primary)}
-  .result-name{font-weight:600;color:var(--primary)}
-  .result-meta{font-size:0.75rem;color:var(--muted)}
-  mark{background:rgba(139,92,246,0.3);padding:0 2px;border-radius:2px;color:var(--text)}
-  .search-meta{font-size:0.75rem;color:var(--muted);margin-bottom:4px;display:flex;justify-content:space-between}
-  
-  .footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;color:var(--muted);gap:12px}
-  .footer-left{display:flex;gap:8px;align-items:center}
-  .theme-btn{background:transparent;border:none;cursor:pointer;font-size:1.2rem;transition:all 0.3s ease;padding:4px 8px}
-  .theme-btn:hover{transform:scale(1.1)}
-  .local-time{font-size:0.75rem;color:var(--muted);font-weight:500;min-width:60px}
-  .small-link{color:var(--primary);text-decoration:none;font-weight:600;transition:all 0.2s}
-  .small-link:hover{text-shadow:0 0 8px rgba(59,130,246,0.5)}
-  
-  /* Notice bar under footer: faded red style */
-  .notice{margin-top:10px;padding:8px 12px;border-radius:8px;background:rgba(220,38,38,0.06);color:rgba(220,38,38,0.95);font-size:0.8rem;text-align:center;border:1px solid rgba(220,38,38,0.09)}
-  
-  #loginOverlay{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg, var(--bg) 0%, #f0f4ff 100%);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px}
-  .login-card{width:100%;max-width:360px;background:var(--card);border-radius:12px;border:1px solid var(--border);padding:28px;box-shadow:0 20px 60px rgba(59,130,246,0.1);position:relative}
-  .login-title{font-size:1.3rem;font-weight:700;text-align:center;color:var(--primary);margin-bottom:6px}
-  .login-subtitle{font-size:0.85rem;text-align:center;color:var(--muted);margin-bottom:20px}
-  .login-group{margin-bottom:14px}
-  .login-label{display:block;font-size:0.8rem;font-weight:600;color:var(--text);margin-bottom:4px}
-  .login-input{width:100%;padding:9px 11px;border-radius:6px;border:1px solid var(--border);background:#ffffff;font-size:0.9rem;color:var(--text);box-sizing:border-box;transition:all 0.3s ease}
-  .login-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 12px rgba(59,130,246,0.2)}
-  .login-btn{width:100%;padding:10px;background:linear-gradient(90deg, var(--primary), var(--accent));color:var(--bg);border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:0.9rem;margin-top:8px;transition:all 0.3s ease}
-  .login-btn:hover{opacity:0.9;box-shadow:0 0 15px rgba(59,130,246,0.3)}
-  .login-error{color:#dc2626;font-size:0.75rem;margin-top:8px;text-align:center;min-height:18px}
-  .login-footer{display:flex;gap:12px;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
-  .home-btn{padding:6px 12px;background:#10b981;color:#ffffff;border:none;border-radius:4px;font-size:0.7rem;font-weight:600;cursor:pointer;transition:all 0.3s ease;text-decoration:none;display:inline-block}
-  .home-btn:hover{opacity:0.9;box-shadow:0 0 10px rgba(16,185,129,0.3)}
-  .login-theme-btn{background:transparent;border:none;cursor:pointer;font-size:1rem;transition:all 0.3s ease;padding:4px 8px}
-  .login-theme-btn:hover{transform:scale(1.1)}
-  .login-time{font-size:0.7rem;color:var(--muted);font-weight:500}
-  
-  #appContainer{display:none}
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(160deg, var(--bg-dark) 0%, var(--bg-mid) 50%, var(--bg-light) 100%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: var(--nav-bg);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(59,130,246,0.12);
+    padding: 0 2rem; height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand { font-size: 1.05rem; font-weight: 700; color: var(--text-primary); text-decoration: none; }
+  .nav-brand span { color: var(--accent-bright); }
+  .nav-links { display: flex; align-items: center; gap: 0.25rem; list-style: none; }
+  .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; padding: 0.4rem 0.7rem; border-radius: 8px; transition: color 0.2s, background 0.2s; }
+  .nav-links a:hover { color: var(--accent-bright); background: rgba(59,130,246,0.1); }
+  .nav-links a.cta { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: var(--accent-bright); }
+
+  .wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 5rem 1.25rem 2rem; }
+
+  .db-card {
+    width: 100%; max-width: 660px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.45), 0 0 0 1px rgba(59,130,246,0.08);
+    animation: fadeUp 0.6s ease both;
+    position: relative;
+  }
+  .db-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(96,165,250,0.4), transparent);
+  }
+
+  .db-header {
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid rgba(59,130,246,0.12);
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    background: rgba(59,130,246,0.04);
+  }
+  .db-title { font-size: 1rem; font-weight: 700; color: var(--accent-bright); letter-spacing: 0.02em; }
+  .db-version {
+    background: rgba(59,130,246,0.12);
+    border: 1px solid rgba(59,130,246,0.25);
+    padding: 0.25rem 0.65rem; border-radius: 6px;
+    font-size: 0.68rem; color: var(--accent-bright); letter-spacing: 0.5px; font-weight: 600;
+  }
+
+  .db-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+
+  #chatbox {
+    height: 320px; border-radius: 12px; padding: 1rem;
+    overflow-y: auto;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(59,130,246,0.1);
+  }
+  #chatbox::-webkit-scrollbar { width: 5px; }
+  #chatbox::-webkit-scrollbar-thumb { background: rgba(96,165,250,0.3); border-radius: 3px; }
+  #chatbox::-webkit-scrollbar-track { background: transparent; }
+
+  .msg { display: flex; gap: 8px; margin: 6px 0; align-items: flex-end; }
+  .msg.user { justify-content: flex-end; }
+  .bubble {
+    padding: 0.55rem 0.9rem; border-radius: 10px;
+    font-size: 0.88rem; line-height: 1.45; max-width: 75%;
+  }
+  .bubble.user { background: var(--msg-user-bg); color: var(--accent-bright); border: 1px solid var(--msg-user-border); }
+  .bubble.bot { background: var(--msg-bot-bg); color: var(--text-primary); border: 1px solid var(--msg-bot-border); }
+  .meta { font-size: 0.62rem; color: var(--text-secondary); margin-top: 2px; }
+
+  .input-row { display: flex; gap: 0.6rem; align-items: center; }
+  .input {
+    flex: 1; padding: 0.7rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--text-primary); font-size: 0.9rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  .input::placeholder { color: rgba(148,163,184,0.4); }
+  .input:focus { border-color: rgba(96,165,250,0.45); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+
+  .btn {
+    padding: 0.7rem 1rem; border-radius: 10px;
+    border: 1px solid rgba(59,130,246,0.4);
+    background: rgba(59,130,246,0.1);
+    color: var(--accent-bright); font-weight: 600; font-size: 0.85rem;
+    cursor: pointer; transition: background 0.2s, box-shadow 0.2s;
+  }
+  .btn:hover { background: rgba(59,130,246,0.22); box-shadow: 0 0 12px rgba(59,130,246,0.25); }
+  .btn.secondary { border-color: rgba(148,163,184,0.2); background: rgba(255,255,255,0.04); color: var(--text-secondary); }
+  .btn.secondary:hover { background: rgba(255,255,255,0.08); }
+
+  .results-wrapper { display: none; }
+  .search-meta { font-size: 0.72rem; color: var(--text-secondary); margin-bottom: 0.4rem; display: flex; justify-content: space-between; }
+  .results {
+    border-radius: 10px; border: 1px solid var(--card-border);
+    background: rgba(0,0,0,0.25); max-height: 180px; overflow-y: auto; padding: 0.3rem;
+  }
+  .result-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.55rem 0.75rem; border-radius: 8px;
+    cursor: pointer; font-size: 0.85rem; color: var(--text-primary);
+    transition: background 0.15s;
+  }
+  .result-item:hover, .result-item.active { background: var(--hover-bg); }
+  .result-name { font-weight: 600; color: var(--accent-bright); }
+  .result-meta { font-size: 0.72rem; color: var(--text-secondary); margin-top: 2px; }
+  mark { background: rgba(96,165,250,0.25); padding: 0 2px; border-radius: 2px; color: var(--text-primary); }
+
+  .db-footer {
+    padding: 0.9rem 1.5rem;
+    border-top: 1px solid rgba(59,130,246,0.1);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.75rem; color: var(--text-secondary); gap: 1rem;
+  }
+  .db-footer-left { display: flex; gap: 0.75rem; align-items: center; }
+  .theme-btn { background: transparent; border: none; cursor: pointer; font-size: 1.1rem; padding: 2px 6px; transition: transform 0.2s; }
+  .theme-btn:hover { transform: scale(1.15); }
+  .local-time { font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; }
+  .small-link { color: var(--accent-bright); text-decoration: none; font-weight: 600; }
+  .small-link:hover { text-decoration: underline; }
+
+  .notice {
+    margin: 0 1.25rem 1rem;
+    padding: 0.65rem 1rem; border-radius: 10px;
+    background: rgba(239,68,68,0.07); color: rgba(252,165,165,0.85);
+    font-size: 0.78rem; text-align: center;
+    border: 1px solid rgba(239,68,68,0.12);
+  }
+
+  /* LOGIN & TOTP OVERLAYS */
+  .overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999;
+    background: linear-gradient(160deg, var(--bg-dark) 0%, var(--bg-mid) 50%, var(--bg-light) 100%);
+    display: flex; align-items: center; justify-content: center; padding: 1.25rem;
+  }
+
+  .login-card {
+    width: 100%; max-width: 380px;
+    background: rgba(15,27,61,0.8);
+    border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 22px; padding: 2.25rem 2rem;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    animation: fadeUp 0.5s ease both;
+    position: relative;
+  }
+  .login-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(96,165,250,0.4), transparent);
+  }
+
+  .login-brand { font-size: 1rem; font-weight: 700; color: var(--text-primary); text-align: center; margin-bottom: 1.25rem; }
+  .login-brand span { color: var(--accent-bright); }
+  .login-title {
+    font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; text-align: center;
+    background: linear-gradient(135deg, #e8f0fe 30%, var(--accent-bright) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    margin-bottom: 0.3rem;
+  }
+  .login-subtitle { font-size: 0.85rem; color: var(--text-secondary); text-align: center; margin-bottom: 1.75rem; }
+
+  .login-group { margin-bottom: 1rem; }
+  .login-label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.04em; margin-bottom: 0.35rem; }
+  .login-input {
+    width: 100%; padding: 0.7rem 1rem;
+    border-radius: 10px; border: 1px solid var(--input-border);
+    background: var(--input-bg); color: var(--text-primary); font-size: 0.9rem;
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .login-input:focus { border-color: rgba(96,165,250,0.5); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+
+  .login-btn {
+    width: 100%; padding: 0.8rem; margin-top: 0.5rem;
+    background: linear-gradient(135deg, rgba(59,130,246,0.8), rgba(96,165,250,0.7));
+    border: 1px solid rgba(96,165,250,0.5);
+    border-radius: 12px; color: #fff; font-size: 0.92rem; font-weight: 600;
+    cursor: pointer; transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+  }
+  .login-btn:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59,130,246,0.35); }
+  .login-btn:active { transform: translateY(0); }
+
+  .login-error { color: #fca5a5; font-size: 0.78rem; margin-top: 0.6rem; text-align: center; min-height: 1.2em; }
+
+  .login-footer-row {
+    display: flex; gap: 0.75rem; align-items: center; margin-top: 1.5rem;
+    padding-top: 1.25rem; border-top: 1px solid rgba(59,130,246,0.1);
+  }
+  .home-btn {
+    padding: 0.45rem 0.9rem;
+    background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3);
+    border-radius: 8px; color: var(--accent-bright);
+    font-size: 0.75rem; font-weight: 600; cursor: pointer; text-decoration: none;
+    transition: background 0.2s;
+  }
+  .home-btn:hover { background: rgba(59,130,246,0.28); }
+  .login-theme-btn { background: transparent; border: none; cursor: pointer; font-size: 1rem; padding: 4px; transition: transform 0.2s; }
+  .login-theme-btn:hover { transform: scale(1.15); }
+  .login-time { font-size: 0.72rem; color: var(--text-secondary); margin-left: auto; }
+
+  #appContainer { display: none; }
+
+  footer { border-top: 1px solid rgba(59,130,246,0.1); padding: 1.5rem 2rem; text-align: center; font-size: 0.82rem; color: rgba(148,163,184,0.5); }
+  footer a { color: var(--accent-bright); text-decoration: none; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 600px) {
+    nav { padding: 0 1rem; }
+    .nav-links a:not(.cta) { display: none; }
+    .login-card { padding: 2rem 1.5rem; }
+    .db-body { padding: 1rem; }
+    #chatbox { height: 260px; }
+  }
 </style>
 </head>
 <body>
-<!-- Main User Login -->
-<div id="loginOverlay">
+
+<nav>
+  <a href="https://rsynzr.cloud/" class="nav-brand">rsynzr<span>.cloud</span></a>
+  <ul class="nav-links">
+    <li><a href="signin.html">Login</a></li>
+    <li><a href="signup.html" class="cta">Sign Up</a></li>
+    <li><a href="https://rsynzr.cloud/">Home</a></li>
+    <li><a href="https://project.rsynzr.cloud/">Projects</a></li>
+  </ul>
+</nav>
+
+<!-- LOGIN OVERLAY -->
+<div class="overlay" id="loginOverlay">
   <div class="login-card">
+    <div class="login-brand">rsynzr<span>.cloud</span></div>
     <div class="login-title">Crush Database</div>
-    <div class="login-subtitle">Secure Access</div>
-    
+    <div class="login-subtitle">Secure Access · v3.1.7</div>
+
     <div class="login-group">
       <label class="login-label">Username</label>
-      <input id="loginUsername" class="login-input" type="text" onkeypress="onLoginKeyPress(event)">
+      <input id="loginUsername" class="login-input" type="text" onkeypress="onLoginKeyPress(event)" />
     </div>
-    
     <div class="login-group">
       <label class="login-label">Password</label>
-      <input id="loginPassword" class="login-input" type="password" onkeypress="onLoginKeyPress(event)">
+      <input id="loginPassword" class="login-input" type="password" onkeypress="onLoginKeyPress(event)" />
     </div>
-    
     <button class="login-btn" onclick="handleLogin()">Login</button>
     <div id="loginError" class="login-error"></div>
 
-    <div class="login-footer">
-      <a href="https://rsynzr.cloud" class="home-btn">🏠 HOME</a>
+    <div class="login-footer-row">
+      <a href="https://rsynzr.cloud" class="home-btn">🏠 Home</a>
       <button class="login-theme-btn" onclick="toggleTheme()" title="Toggle Theme">🌙</button>
       <div class="login-time" id="loginTime">--:--</div>
     </div>
   </div>
 </div>
 
-<!-- TOTP -->
-<div id="totpOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg, var(--bg) 0%, #f0f4ff 100%);align-items:center;justify-content:center;z-index:1000;padding:20px;">
-  <div class="login-card" style="max-width:420px;margin:auto;">
-    <div class="login-title">Two-Factor Authentication</div>
-    <div class="login-subtitle">Enter the 6-digit code from your authenticator app</div>
+<!-- TOTP OVERLAY -->
+<div class="overlay" id="totpOverlay" style="display:none;">
+  <div class="login-card" style="max-width:400px;">
+    <div class="login-brand">rsynzr<span>.cloud</span></div>
+    <div class="login-title">2FA Verification</div>
+    <div class="login-subtitle">Masukkan kode 6 digit dari authenticator app</div>
 
     <div class="login-group">
       <label class="login-label">Code</label>
-      <input id="totpInput" class="login-input" type="text" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder="Enter 6-digit code" onkeypress="if(event.key==='Enter') verifyTOTP()">
+      <input id="totpInput" class="login-input" type="text" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder="000000" onkeypress="if(event.key==='Enter') verifyTOTP()" />
     </div>
-
     <button class="login-btn" onclick="verifyTOTP()">Verify</button>
-    <div id="totpError" class="login-error" style="margin-top:6px"></div>
+    <div id="totpError" class="login-error"></div>
 
-    <div class="login-footer">
-      <button class="home-btn" onclick="handleLogout()">Cancel / Logout</button>
-      <div class="login-time" id="totpTime">--:--</div>
+    <div class="login-footer-row">
+      <button class="home-btn" onclick="handleLogout()">Cancel</button>
+      <div class="login-time" id="totpTime" style="margin-left:auto;">--:--</div>
     </div>
   </div>
 </div>
 
-<!-- Main App Database -->
+<!-- MAIN APP -->
 <div id="appContainer">
-<div class="wrap">
-  <div class="card" role="application">
-    <div class="header">
-      <div class="title">Crush Database</div>
-      <div class="version">v3.1.7</div>
-    </div>
-    <div class="body">
-      <div id="chatbox" aria-live="polite"></div>
-
-      <div class="input-row">
-        <input id="userInput" class="input" placeholder="Cari crush..." aria-label="Search crush" oninput="onType()" onkeydown="onKeyDown(event)">
-        <button class="btn" onclick="sendMessage()" title="Cari">Cari</button>
-        <button class="btn secondary" onclick="clearChat()" title="Clear">Clear</button>
+  <div class="wrap">
+    <div class="db-card">
+      <div class="db-header">
+        <div class="db-title">Crush Database</div>
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <div class="db-version">v3.1.7</div>
+        </div>
       </div>
 
-      <div id="resultsWrapper" style="display:none;">
-        <div class="search-meta"><div id="resultsCount">0 results</div><div id="searchSpeed">—</div></div>
-        <div id="results" class="results" role="listbox" tabindex="-1"></div>
-      </div>
-    </div>
+      <div class="db-body">
+        <div id="chatbox" aria-live="polite"></div>
 
-    <div class="footer">
-      <div class="footer-left">
-        <button class="theme-btn" onclick="toggleTheme()" title="Toggle Theme">🌙</button>
-        <div class="local-time" id="localTime">--:--</div>
+        <div class="input-row">
+          <input id="userInput" class="input" placeholder="Cari crush..." aria-label="Search crush" oninput="onType()" onkeydown="onKeyDown(event)" />
+          <button class="btn" onclick="sendMessage()">Cari</button>
+          <button class="btn secondary" onclick="clearChat()">Clear</button>
+        </div>
+
+        <div id="resultsWrapper" class="results-wrapper">
+          <div class="search-meta">
+            <div id="resultsCount">0 results</div>
+            <div id="searchSpeed">—</div>
+          </div>
+          <div id="results" class="results" role="listbox" tabindex="-1"></div>
+        </div>
       </div>
-      <div>Created by <a class="small-link" href="https://github.com/rsynzr" target="_blank" rel="noopener">@rsynzr_</a></div>
-      <button class="btn secondary" onclick="handleLogout()" style="padding:6px 10px;font-size:0.75rem">Logout</button>
+
+      <div class="db-footer">
+        <div class="db-footer-left">
+          <button class="theme-btn" onclick="toggleTheme()" title="Toggle Theme">🌙</button>
+          <div class="local-time" id="localTime">--:--</div>
+        </div>
+        <a class="small-link" href="https://github.com/rsynzr" target="_blank" rel="noopener">@rsynzr_</a>
+        <button class="btn secondary" onclick="handleLogout()" style="padding:0.4rem 0.75rem;font-size:0.75rem;">Logout</button>
+      </div>
+
+      <div class="notice">⚠️ Data tidak 100% akurat dan sangat mungkin terdapat kesalahan.</div>
     </div>
-    <div class="notice">Notice: data tidak 100% benar dan sangat mungkin adanya kesalahan</div>
   </div>
-</div>
 </div>
 
 <script>
-  // ========== DATABASE ==========
   const DB = [
     {name:'Aci', alias:['aci'], crushes:[{name:'Rendra', school:'Sdms'}], school:'Sdms'},
     {name:'Arsya', alias:['arsya'], crushes:[{name:'-', school:'-'}], school:'Ps'},
@@ -242,421 +421,57 @@
     {name:'Ammar', alias:['ammar'], crushes:[{name:'Esta', school:'Ps'}], school:'Ps'},
     {name:'Esta', alias:['esta'], crushes:[{name:'Ammar', school:'Ps'}], school:'Ps'},
     {name:'Adrian', alias:['adrian'], crushes:[{name:'Ulfa', school:'Ps'}], school:'Ps'},
-     {name:'Ulfa', alias:['ulfa'], crushes:[{name:'Adrian', school:'Ps'}], school:'Ps'},
+    {name:'Ulfa', alias:['ulfa'], crushes:[{name:'Adrian', school:'Ps'}], school:'Ps'},
   ];
 
-  // ========== UTILITIES ==========
-  const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[c]));
+  const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const getDisplayName = n => { const f = DB.find(it => it.name.toLowerCase() === n.toLowerCase()); return f ? `${f.name} (${f.school})` : n.charAt(0).toUpperCase()+n.slice(1).toLowerCase(); };
+  const formatCrushes = c => { if(!c||!c.length) return '-'; return c.map(x => x.school&&x.school!=='-'&&x.school!=='' ? `${x.name} (${x.school})` : x.name).join(', '); };
+  const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
+  const score = (item, q) => { if(!q) return 0; const ql=q.toLowerCase(); for(const s of [item.name,...(item.alias||[])]) { const v=String(s).toLowerCase(); if(v===ql) return 100; if(v.startsWith(ql)) return 80; if(v.includes(ql)) return 50; } return 0; };
+  const highlight = (text,q) => { if(!q) return escapeHtml(text); const idx=text.toLowerCase().indexOf(q.toLowerCase()); if(idx===-1) return escapeHtml(text); return escapeHtml(text.slice(0,idx))+'<mark>'+escapeHtml(text.slice(idx,idx+q.length))+'</mark>'+escapeHtml(text.slice(idx+q.length)); };
 
-  const capitalize = (name) => {
-    const found = DB.find(it => it.name.toLowerCase() === name.toLowerCase());
-    return found ? found.name : name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
-  };
-
-  const getDisplayName = (name) => {
-    const found = DB.find(it => it.name.toLowerCase() === name.toLowerCase());
-    if (found) {
-      return `${found.name} (${found.school})`;
-    }
-    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
-  };
-
-  const formatCrushes = (crushes) => {
-    if (!crushes || crushes.length === 0) return '-';
-    return crushes.map(c => {
-      if (c.school && c.school !== '-' && c.school !== '') {
-        return `${c.name} (${c.school})`;
-      }
-      return c.name;
-    }).join(', ');
-  };
-
-  const debounce = (fn, ms) => {
-    let t;
-    return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
-  };
-
-  const score = (item, q) => {
-    if(!q) return 0;
-    const ql = q.toLowerCase();
-    for (const s of [item.name, ...(item.alias||[])]) {
-      const v = String(s).toLowerCase();
-      if (v === ql) return 100;
-      if (v.startsWith(ql)) return 80;
-      if (v.includes(ql)) return 50;
-    }
-    return 0;
-  };
-
-  const highlight = (text, q) => {
-    if(!q) return escapeHtml(text);
-    const idx = text.toLowerCase().indexOf(q.toLowerCase());
-    if(idx === -1) return escapeHtml(text);
-    const before = escapeHtml(text.slice(0, idx));
-    const match = escapeHtml(text.slice(idx, idx+q.length));
-    const after = escapeHtml(text.slice(idx+q.length));
-    return `${before}<mark>${match}</mark>${after}`;
-  };
-
-  // ========== MAIN LOGIC ==========
   let activeIndex = -1;
   const doSearchDebounced = debounce(doSearch, 100);
 
-  function onType() {
-    const q = document.getElementById('userInput').value;
-    document.getElementById('resultsWrapper').style.display = q.trim() ? 'block' : 'none';
-    doSearchDebounced(q);
-  }
+  function onType() { const q=document.getElementById('userInput').value; document.getElementById('resultsWrapper').style.display=q.trim()?'block':'none'; doSearchDebounced(q); }
+  function doSearch(q='') { const start=performance.now(); const t=String(q).trim(); if(!t){renderResults([]);document.getElementById('searchSpeed').textContent='—';return;} const scored=DB.map(it=>({it,s:score(it,t)})).filter(x=>x.s>0); scored.sort((a,b)=>b.s-a.s); renderResults(scored.slice(0,10).map(x=>x.it),t); document.getElementById('searchSpeed').textContent=Math.max(0,Math.round(performance.now()-start))+'ms'; }
+  function renderResults(results,q='') { const root=document.getElementById('results'); root.innerHTML=''; document.getElementById('resultsCount').textContent=`${results.length} result${results.length!==1?'s':''}`; if(!results.length) return; const frag=document.createDocumentFragment(); results.forEach((r,i)=>{ const item=document.createElement('div'); item.className='result-item'; item.setAttribute('role','option'); item.dataset.index=i; item.innerHTML=`<div><div class="result-name">${highlight(r.name,q)} <span style="font-size:0.78em;opacity:0.6">(${r.school})</span></div><div class="result-meta">${highlight(r.alias.join(', '),q)}</div></div>`; item.onclick=()=>selectResult(i); item.onmouseover=()=>setActive(i); frag.appendChild(item); }); root.appendChild(frag); activeIndex=-1; updateActive(); }
+  function setActive(i){activeIndex=i;updateActive();}
+  function updateActive(){document.querySelectorAll('#results .result-item').forEach((it,idx)=>it.classList.toggle('active',idx===activeIndex));}
+  function onKeyDown(e){const v=document.getElementById('resultsWrapper').style.display==='block';const items=document.querySelectorAll('#results .result-item');if(!v||!items.length){if(e.key==='Enter'){e.preventDefault();sendMessage();}return;}if(e.key==='ArrowDown'){e.preventDefault();activeIndex=Math.min(items.length-1,activeIndex+1);updateActive();items[activeIndex].scrollIntoView({block:'nearest'});}else if(e.key==='ArrowUp'){e.preventDefault();activeIndex=Math.max(0,activeIndex-1);updateActive();items[activeIndex].scrollIntoView({block:'nearest'});}else if(e.key==='Enter'){e.preventDefault();if(activeIndex>=0)selectResult(activeIndex);else sendMessage();}else if(e.key==='Escape'){document.getElementById('resultsWrapper').style.display='none';}}
+  function selectResult(index){const item=document.querySelectorAll('#results .result-item')[index];if(!item)return;const name=item.querySelector('.result-name').textContent.trim().replace(/\s*\([^)]*\)\s*$/,'').trim();document.getElementById('userInput').value=name;document.getElementById('resultsWrapper').style.display='none';}
+  function sendMessage(){const input=document.getElementById('userInput');const text=input.value.trim();if(!text)return;const displayName=getDisplayName(text);addMessage('user',displayName);const matched=DB.find(it=>it.name.toLowerCase()===text.toLowerCase()||(it.alias||[]).some(a=>a.toLowerCase()===text.toLowerCase()));setTimeout(()=>addMessage('bot',matched?`${displayName} → ${formatCrushes(matched.crushes)}`:'No Data'),180);input.value='';document.getElementById('resultsWrapper').style.display='none';}
+  function addMessage(kind,text){const box=document.getElementById('chatbox');const wrap=document.createElement('div');wrap.className='msg '+(kind==='user'?'user':'bot');const bubble=document.createElement('div');bubble.className='bubble '+(kind==='user'?'user':'bot');bubble.innerHTML=escapeHtml(text);const meta=document.createElement('div');meta.className='meta';meta.textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});wrap.appendChild(bubble);wrap.appendChild(meta);box.appendChild(wrap);box.scrollTop=box.scrollHeight;}
+  function clearChat(){document.getElementById('chatbox').innerHTML='';}
 
-  function doSearch(q='') {
-    const start = performance.now();
-    const trimmed = String(q).trim();
-    
-    if (!trimmed) {
-      renderResults([]);
-      document.getElementById('searchSpeed').textContent = '—';
-      return;
-    }
-    
-    const scored = DB.map(it => ({it, s: score(it, trimmed)})).filter(x=>x.s>0);
-    scored.sort((a,b)=>b.s - a.s);
-    const results = scored.slice(0, 10).map(x=>x.it);
-    
-    renderResults(results, trimmed);
-    const ms = Math.max(0, Math.round(performance.now() - start));
-    document.getElementById('searchSpeed').textContent = `${ms}ms`;
-  }
-
-  function renderResults(results, q='') {
-    const root = document.getElementById('results');
-    root.innerHTML = '';
-    document.getElementById('resultsCount').textContent = `${results.length} result${results.length!==1 ? 's' : ''}`;
-    
-    if (results.length === 0) return;
-    
-    const frag = document.createDocumentFragment();
-    results.forEach((r, i) => {
-      const item = document.createElement('div');
-      item.className = 'result-item';
-      item.setAttribute('role','option');
-      item.dataset.index = i;
-      item.innerHTML = `
-        <div><div class="result-name">${highlight(r.name, q)} <span style="font-size:0.8em;color:var(--muted)">(${r.school})</span></div><div class="result-meta">${highlight(r.alias.join(', '), q)}</div></div>
-      `;
-      item.onclick = () => selectResult(i);
-      item.onmouseover = () => setActive(i);
-      frag.appendChild(item);
-    });
-    root.appendChild(frag);
-    activeIndex = -1;
-    updateActive();
-  }
-
-  function setActive(i) { activeIndex = i; updateActive(); }
-
-  function updateActive() {
-    document.querySelectorAll('#results .result-item').forEach((it, idx) => 
-      it.classList.toggle('active', idx === activeIndex)
-    );
-  }
-
-  function onKeyDown(e) {
-    const resultsVisible = document.getElementById('resultsWrapper').style.display === 'block';
-    const items = document.querySelectorAll('#results .result-item');
-    
-    if (!resultsVisible || items.length===0) {
-      if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
-      return;
-    }
-    
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      activeIndex = Math.min(items.length-1, activeIndex+1);
-      updateActive();
-      items[activeIndex].scrollIntoView({block:'nearest'});
-    }
-    else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      activeIndex = Math.max(0, activeIndex-1);
-      updateActive();
-      items[activeIndex].scrollIntoView({block:'nearest'});
-    }
-    else if (e.key === 'Enter') {
-      e.preventDefault();
-      if (activeIndex >= 0) selectResult(activeIndex);
-      else sendMessage();
-    }
-    else if (e.key === 'Escape') {
-      document.getElementById('resultsWrapper').style.display = 'none';
-    }
-  }
-
-  function selectResult(index) {
-    const item = document.querySelectorAll('#results .result-item')[index];
-    if (!item) return;
-    const nameElem = item.querySelector('.result-name');
-    const fullText = nameElem.textContent.trim();
-    // Extract name only (without school info in parentheses)
-    const name = fullText.replace(/\s*\([^)]*\)\s*$/, '').trim();
-    
-    // Put name in input box
-    document.getElementById('userInput').value = name;
-    document.getElementById('resultsWrapper').style.display = 'none';
-  }
-
-  function sendMessage() {
-    const input = document.getElementById('userInput');
-    const text = input.value.trim();
-    if (!text) return;
-    
-    const displayName = getDisplayName(text);
-    addMessage('user', displayName);
-    
-    const matched = DB.find(it => 
-      it.name.toLowerCase() === text.toLowerCase() || 
-      (it.alias||[]).some(a => a.toLowerCase() === text.toLowerCase())
-    );
-    
-    setTimeout(() => addMessage('bot', matched ? `${displayName} → ${formatCrushes(matched.crushes)}` : 'No Data'), 180);
-    
-    input.value = '';
-    document.getElementById('resultsWrapper').style.display = 'none';
-  }
-
-  function addMessage(kind, text) {
-    const box = document.getElementById('chatbox');
-    const wrap = document.createElement('div');
-    wrap.className = 'msg ' + (kind==='user' ? 'user' : 'bot');
-    
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble ' + (kind==='user' ? 'user' : 'bot');
-    bubble.innerHTML = escapeHtml(text);
-    
-    const meta = document.createElement('div');
-    meta.className = 'meta';
-    meta.textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    
-    wrap.appendChild(bubble);
-    wrap.appendChild(meta);
-    box.appendChild(wrap);
-    box.scrollTop = box.scrollHeight;
-  }
-
-  function clearChat() { document.getElementById('chatbox').innerHTML = ''; }
-
-  // ========== THEME & CLOCK ==========
-  let isDarkMode = false
-
+  let isDark = false;
   function toggleTheme() {
-    isDarkMode = !isDarkMode
-    const root = document.documentElement
-
-    const themeBtn = document.querySelector('.theme-btn')
-    const loginThemeBtn = document.querySelector('.login-theme-btn')
-    const loginOverlay = document.getElementById('loginOverlay')
-
-    if (isDarkMode) {
-      root.style.setProperty('--bg', '#0f1419')
-      root.style.setProperty('--card', '#1a1f35')
-      root.style.setProperty('--muted', '#7c8aa8')
-      root.style.setProperty('--primary', '#00d9ff')
-      root.style.setProperty('--accent', '#7c3aed')
-      root.style.setProperty('--text', '#e0e7ff')
-      root.style.setProperty('--msg-user', '#1e2749')
-      root.style.setProperty('--msg-bot', '#161b2e')
-      root.style.setProperty('--border', '#2d3748')
-      root.style.setProperty('--hover', '#00d9ff15')
-
-      document.body.style.background =
-        'linear-gradient(135deg, #0f1419 0%, #0d1117 100%)'
-
-      if (loginOverlay)
-        loginOverlay.style.background =
-          'linear-gradient(135deg, #0f1419 0%, #0d1117 100%)'
-
-      if (themeBtn) themeBtn.textContent = '☀️'
-      if (loginThemeBtn) loginThemeBtn.textContent = '☀️'
-    } else {
-      root.style.setProperty('--bg', '#f8f9fb')
-      root.style.setProperty('--card', '#ffffff')
-      root.style.setProperty('--muted', '#6b7280')
-      root.style.setProperty('--primary', '#3b82f6')
-      root.style.setProperty('--accent', '#8b5cf6')
-      root.style.setProperty('--text', '#1f2937')
-      root.style.setProperty('--msg-user', '#dbeafe')
-      root.style.setProperty('--msg-bot', '#f3f4f6')
-      root.style.setProperty('--border', '#e5e7eb')
-      root.style.setProperty('--hover', '#f0f4ff')
-
-      document.body.style.background =
-        'linear-gradient(135deg, #f8f9fb 0%, #f0f4ff 100%)'
-
-      if (loginOverlay)
-        loginOverlay.style.background =
-          'linear-gradient(135deg, #f8f9fb 0%, #f0f4ff 100%)'
-
-      if (themeBtn) themeBtn.textContent = '🌙'
-      if (loginThemeBtn) loginThemeBtn.textContent = '🌙'
-    }
-
-    localStorage.setItem('darkMode', isDarkMode)
+    isDark=!isDark;
+    const r=document.documentElement;
+    if(isDark){r.style.setProperty('--bg-dark','#060c18');r.style.setProperty('--bg-mid','#090f22');r.style.setProperty('--bg-light','#0d1535');r.style.setProperty('--card-bg','rgba(6,12,30,0.85)');r.style.setProperty('--input-bg','rgba(255,255,255,0.03)');document.querySelectorAll('.theme-btn,.login-theme-btn').forEach(b=>b.textContent='☀️');}
+    else{r.style.setProperty('--bg-dark','#0b1220');r.style.setProperty('--bg-mid','#0f1b3d');r.style.setProperty('--bg-light','#1a2f6b');r.style.setProperty('--card-bg','rgba(15,27,61,0.7)');r.style.setProperty('--input-bg','rgba(255,255,255,0.05)');document.querySelectorAll('.theme-btn,.login-theme-btn').forEach(b=>b.textContent='🌙');}
+    localStorage.setItem('darkMode',isDark);
   }
 
-  function updateClock() {
-    const time = new Date().toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+  function updateClock(){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});['localTime','loginTime','totpTime'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t;});}
+  function onLoginKeyPress(e){if(e.key==='Enter')handleLogin();}
+  function handleLogin(){const u=document.getElementById('loginUsername').value;const p=document.getElementById('loginPassword').value;const err=document.getElementById('loginError');if(u==='Admin'&&p==='admin'){err.textContent='';document.getElementById('loginOverlay').style.display='none';document.getElementById('totpOverlay').style.display='flex';setTimeout(()=>{const t=document.getElementById('totpInput');if(t)t.focus();},120);}else{err.textContent='Invalid username or password';}}
+  function handleLogout(){document.getElementById('loginOverlay').style.display='flex';document.getElementById('appContainer').style.display='none';document.getElementById('totpOverlay').style.display='none';['loginUsername','loginPassword'].forEach(id=>document.getElementById(id).value='');['loginError','totpError'].forEach(id=>document.getElementById(id).textContent='');const ti=document.getElementById('totpInput');if(ti)ti.value='';document.getElementById('chatbox').innerHTML='';document.getElementById('userInput').value='';}
 
-    const localTimeElem = document.getElementById('localTime')
-    const loginTimeElem = document.getElementById('loginTime')
-    const totpTimeElem = document.getElementById('totpTime')
+  const TOTP_SECRET='PJAWW3RFO4ZGSZRQI4RXUSTBF56UYP2C';
+  function base32Decode(input){const alpha='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';let bits=0,value=0;const bytes=[];input=input.replace(/=+$/,'').toUpperCase();for(const c of input){const idx=alpha.indexOf(c);if(idx===-1)continue;value=(value<<5)|idx;bits+=5;if(bits>=8){bytes.push((value>>>(bits-8))&255);bits-=8;}}return new Uint8Array(bytes);}
+  async function hmacSha1(key,msg){const ck=await crypto.subtle.importKey('raw',key,{name:'HMAC',hash:'SHA-1'},false,['sign']);return new Uint8Array(await crypto.subtle.sign('HMAC',ck,msg));}
+  async function generateTOTP(time=Date.now()){const key=base32Decode(TOTP_SECRET);const counter=Math.floor(time/1000/30);const buf=new ArrayBuffer(8);const view=new DataView(buf);view.setUint32(0,Math.floor(counter/0x100000000));view.setUint32(4,counter>>>0);const hash=await hmacSha1(key,buf);const offset=hash[hash.length-1]&15;const code=((hash[offset]&127)<<24)|((hash[offset+1]&255)<<16)|((hash[offset+2]&255)<<8)|(hash[offset+3]&255);return(code%1000000).toString().padStart(6,'0');}
+  async function verifyTOTP(){const input=document.getElementById('totpInput');const err=document.getElementById('totpError');if(!input||!err)return;const code=input.value.trim();if(!/^\d{6}$/.test(code)){err.textContent='Enter 6-digit code';return;}const now=Date.now();for(let i=-1;i<=1;i++){const expected=await generateTOTP(now+i*30000);if(expected===code){err.textContent='';input.value='';document.getElementById('totpOverlay').style.display='none';document.getElementById('appContainer').style.display='block';return;}}err.textContent='Invalid code';}
 
-    if (localTimeElem) localTimeElem.textContent = time
-    if (loginTimeElem) loginTimeElem.textContent = time
-    if (totpTimeElem) totpTimeElem.textContent = time
-  }
-
-  function onLoginKeyPress(e) { if (e.key === 'Enter') handleLogin(); }
-
-  function handleLogin() {
-    const u = document.getElementById('loginUsername').value;
-    const p = document.getElementById('loginPassword').value;
-    const err = document.getElementById('loginError');
-
-    if (u === 'Admin' && p === 'admin') {
-      err.textContent = '';
-      document.getElementById('loginOverlay').style.display = 'none';
-      document.getElementById('totpOverlay').style.display = 'flex';
-      setTimeout(() => {
-        const t = document.getElementById('totpInput'); if (t) t.focus();
-      }, 120);
-    } else {
-      err.textContent = 'Invalid username or password';
-    }
-  }
-
-  function handleLogout() {
-    document.getElementById('loginOverlay').style.display = 'flex';
-    document.getElementById('appContainer').style.display = 'none';
-    document.getElementById('totpOverlay').style.display = 'none';
-    document.getElementById('loginUsername').value = '';
-    document.getElementById('loginPassword').value = '';
-    document.getElementById('loginError').textContent = '';
-    document.getElementById('totpError').textContent = '';
-    const ti = document.getElementById('totpInput'); if (ti) ti.value = '';
-    document.getElementById('chatbox').innerHTML = '';
-    document.getElementById('userInput').value = '';
-  }
-
-  /* =========================================
-     TOTP – Web Crypto API 
-     ========================================= */
-
-  const TOTP_SECRET = 'PJAWW3RFO4ZGSZRQI4RXUSTBF56UYP2C'
-
-  function base32Decode(input) {
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
-    let bits = 0
-    let value = 0
-    const bytes = []
-
-    input = input.replace(/=+$/, '').toUpperCase()
-
-    for (const char of input) {
-      const idx = alphabet.indexOf(char)
-      if (idx === -1) continue
-
-      value = (value << 5) | idx
-      bits += 5
-
-      if (bits >= 8) {
-        bytes.push((value >>> (bits - 8)) & 255)
-        bits -= 8
-      }
-    }
-
-    return new Uint8Array(bytes)
-  }
-
-  async function hmacSha1(key, msg) {
-    const cryptoKey = await crypto.subtle.importKey(
-      'raw',
-      key,
-      { name: 'HMAC', hash: 'SHA-1' },
-      false,
-      ['sign']
-    )
-
-    const sig = await crypto.subtle.sign('HMAC', cryptoKey, msg)
-    return new Uint8Array(sig)
-  }
-
-  async function generateTOTP(time = Date.now()) {
-    const key = base32Decode(TOTP_SECRET)
-    const counter = Math.floor(time / 1000 / 30)
-
-    const buffer = new ArrayBuffer(8)
-    const view = new DataView(buffer)
-
-    view.setUint32(0, Math.floor(counter / 0x100000000))
-    view.setUint32(4, counter >>> 0)
-
-    const hash = await hmacSha1(key, buffer)
-    const offset = hash[hash.length - 1] & 15
-
-    const code =
-      ((hash[offset] & 127) << 24) |
-      ((hash[offset + 1] & 255) << 16) |
-      ((hash[offset + 2] & 255) << 8) |
-      (hash[offset + 3] & 255)
-
-    return (code % 1000000).toString().padStart(6, '0')
-  }
-
-  async function verifyTOTP() {
-    const input = document.getElementById('totpInput')
-    const err = document.getElementById('totpError')
-
-    if (!input || !err) return
-
-    const code = input.value.trim()
-
-    if (!/^\d{6}$/.test(code)) {
-      err.textContent = 'Enter 6-digit code'
-      return
-    }
-
-    const now = Date.now()
-
-    for (let i = -1; i <= 1; i++) {
-      const expected = await generateTOTP(now + i * 30000)
-      if (expected === code) {
-        err.textContent = ''
-        input.value = ''
-        document.getElementById('totpOverlay').style.display = 'none'
-        document.getElementById('appContainer').style.display = 'block'
-        return
-      }
-    }
-
-    err.textContent = 'Invalid code'
-  }
-
-  window.addEventListener('load', () => {
-    updateClock()
-    setInterval(updateClock, 1000)
-
-    const saved = localStorage.getItem('darkMode')
-    if (saved === 'true') toggleTheme()
-
-    const loginOv = document.getElementById('loginOverlay');
-    const totpOv = document.getElementById('totpOverlay');
-    const appC = document.getElementById('appContainer');
-    if (loginOv) loginOv.style.display = 'flex';
-    if (totpOv) totpOv.style.display = 'none';
-    if (appC) appC.style.display = 'none';
+  window.addEventListener('load',()=>{
+    updateClock(); setInterval(updateClock,1000);
+    if(localStorage.getItem('darkMode')==='true') toggleTheme();
+    document.getElementById('loginOverlay').style.display='flex';
+    document.getElementById('totpOverlay').style.display='none';
+    document.getElementById('appContainer').style.display='none';
   });
 </script>
+</body>
+</html>
